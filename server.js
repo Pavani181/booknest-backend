@@ -14,18 +14,25 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Configure CORS properly for both local + deployed frontend
 const allowedOrigins = [
-  "http://localhost:5173", // local frontend (Vite dev)
-  process.env.FRONTEND_URL, // Vercel frontend (to be set in Render)
-].filter(Boolean);
+  "http://localhost:5173", // local frontend
+  "https://booknest-frontend-chi.vercel.app" // deployed frontend
+];
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: function(origin, callback) {
+    // allow requests with no origin (like Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
+
 
 // ✅ Serve uploaded images
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
